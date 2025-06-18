@@ -1,0 +1,317 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines_ivanlab6_VM_name": {
+            "defaultValue": "ivanlab6-VM",
+            "type": "String"
+        },
+        "publicIPAddresses_ivanlab6_VM_ip_name": {
+            "defaultValue": "ivanlab6-VM-ip",
+            "type": "String"
+        },
+        "networkInterfaces_ivanlab6_vm434_z3_name": {
+            "defaultValue": "ivanlab6-vm434_z3",
+            "type": "String"
+        },
+        "virtualNetworks_Student_1731423_vnet_name": {
+            "defaultValue": "Student-1731423-vnet",
+            "type": "String"
+        },
+        "networkSecurityGroups_ivanlab6_VM_nsg_name": {
+            "defaultValue": "ivanlab6-VM-nsg",
+            "type": "String"
+        },
+        "virtualNetworks_Bastion_Vnet_externalid": {
+            "defaultValue": "/subscriptions/71d310bf-1718-4d11-87d1-99a7d4e2053f/resourceGroups/Bastion_RG/providers/Microsoft.Network/virtualNetworks/Bastion-Vnet",
+            "type": "String"
+        },
+        "adminPassword": { // <--- ADD THIS PARAMETER
+            "type": "secureString",
+            "metadata": {
+                "description": "Admin password for the VM."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-05-01",
+            "name": "[parameters('networkSecurityGroups_ivanlab6_VM_nsg_name')]",
+            "location": "canadacentral",
+            "tags": {
+                "DeploymentId": "1731423",
+                "LaunchId": "51699",
+                "LaunchType": "ON_DEMAND_LAB",
+                "TemplateId": "7633",
+                "TenantId": "353"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "RDP",
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', parameters('networkSecurityGroups_ivanlab6_VM_nsg_name'), 'RDP')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 300,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2024-05-01",
+            "name": "[parameters('publicIPAddresses_ivanlab6_VM_ip_name')]",
+            "location": "canadacentral",
+            "tags": {
+                "DeploymentId": "1731423",
+                "LaunchId": "51699",
+                "LaunchType": "ON_DEMAND_LAB",
+                "TemplateId": "7633",
+                "TenantId": "353"
+            },
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "zones": [
+                "3"
+            ],
+            "properties": {
+                "ipAddress": "4.206.209.155",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2024-05-01",
+            "name": "[parameters('virtualNetworks_Student_1731423_vnet_name')]",
+            "location": "canadacentral",
+            "tags": {
+                "DeploymentId": "1731423",
+                "LaunchId": "51699",
+                "LaunchType": "ON_DEMAND_LAB",
+                "TemplateId": "7633",
+                "TenantId": "353"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.8.78.0/24"
+                    ]
+                },
+                "privateEndpointVNetPolicies": "Disabled",
+                "subnets": [
+                    {
+                        "name": "Virtual-Desktop-Client",
+                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_Student_1731423_vnet_name'), 'Virtual-Desktop-Client')]",
+                        "properties": {
+                            "addressPrefix": "10.8.78.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    }
+                ],
+
+                "enableDdosProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-11-01",
+            "name": "[parameters('virtualMachines_ivanlab6_VM_name')]",
+            "location": "canadacentral",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_ivanlab6_vm434_z3_name'))]"
+            ],
+            "tags": {
+                "DeploymentId": "1731423",
+                "LaunchId": "51699",
+                "LaunchType": "ON_DEMAND_LAB",
+                "TemplateId": "7633",
+                "TenantId": "353"
+            },
+            "zones": [
+                "3"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D2s_v3"
+                },
+                "additionalCapabilities": {
+                    "hibernationEnabled": false
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-datacenter-gensecond",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachines_ivanlab6_VM_name'), '_OsDisk_1_74beaf26c9764c31a8b642d39f02446b')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+  "storageAccountType": "StandardSSD_LRS"
+},
+                        "deleteOption": "Delete",
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [],
+                    "diskControllerType": "SCSI"
+                },
+               "osProfile": {
+  "computerName": "[parameters('virtualMachines_ivanlab6_VM_name')]",
+  "adminUsername": "iconcon",
+  "adminPassword": "[parameters('adminPassword')]",
+  "windowsConfiguration": {
+    "provisionVMAgent": true,
+    "enableAutomaticUpdates": true,
+    "patchSettings": {
+      "patchMode": "AutomaticByOS",
+      "assessmentMode": "ImageDefault",
+      "enableHotpatching": false
+    }
+  },
+  "secrets": [],
+  "allowExtensionOperations": true
+},
+
+                "securityProfile": {
+                    "uefiSettings": {
+                        "secureBootEnabled": true,
+                        "vTpmEnabled": true
+                    },
+                    "securityType": "TrustedLaunch"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_ivanlab6_vm434_z3_name'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('networkSecurityGroups_ivanlab6_VM_nsg_name'), '/RDP')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_ivanlab6_VM_nsg_name'))]"
+            ],
+            "properties": {
+                "protocol": "TCP",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 300,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2024-05-01",
+            "name": "[concat(parameters('virtualNetworks_Student_1731423_vnet_name'), '/Virtual-Desktop-Client')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Student_1731423_vnet_name'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.8.78.0/24",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2024-05-01",
+            "name": "[parameters('networkInterfaces_ivanlab6_vm434_z3_name')]",
+            "location": "canadacentral",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_ivanlab6_VM_ip_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_Student_1731423_vnet_name'), 'Virtual-Desktop-Client')]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_ivanlab6_VM_nsg_name'))]"
+            ],
+            "tags": {
+                "DeploymentId": "1731423",
+                "LaunchId": "51699",
+                "LaunchType": "ON_DEMAND_LAB",
+                "TemplateId": "7633",
+                "TenantId": "353"
+            },
+            "kind": "Regular",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "id": "[concat(resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_ivanlab6_vm434_z3_name')), '/ipConfigurations/ipconfig1')]",
+                        "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
+                        "properties": {
+                            "privateIPAddress": "10.8.78.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_ivanlab6_VM_ip_name'))]",
+                                "properties": {
+                                    "deleteOption": "Delete"
+                                }
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_Student_1731423_vnet_name'), 'Virtual-Desktop-Client')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": true,
+                "enableIPForwarding": false,
+                "disableTcpStateTracking": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_ivanlab6_VM_nsg_name'))]"
+                },
+                "nicType": "Standard",
+                "auxiliaryMode": "None",
+                "auxiliarySku": "None"
+            }
+        }
+    ]
+}
